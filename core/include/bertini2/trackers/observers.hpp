@@ -32,6 +32,9 @@
 #pragma once
 
 #include "bertini2/trackers/events.hpp"
+
+#include "bertini2/detail/observer.hpp"
+
 #include "bertini2/trackers/base_tracker.hpp"
 #include "bertini2/logging.hpp"
 #include <boost/type_index.hpp>
@@ -63,16 +66,14 @@ namespace bertini {
 						precision_increased_ = true;
 						next_precision_ = next;
 						time_of_first_increase_ = t.CurrentTime();
-						t.RemoveObserver(this);
+						t.RemoveObserver(*this);
 					}
 
 				}
 			}
 
 
-			virtual void Visit(TrackerT const& t) override
-			{
-			}
+
 
 		public:
 
@@ -95,6 +96,8 @@ namespace bertini {
 			{
 				return time_of_first_increase_;
 			}
+
+			virtual ~FirstPrecisionRecorder() = default;
 
 		private:
 
@@ -129,8 +132,7 @@ namespace bertini {
 			}
 
 
-			virtual void Visit(TrackerT const& t) override
-			{}
+
 
 		public:
 
@@ -150,6 +152,8 @@ namespace bertini {
 			void MaxPrecision(unsigned m)
 			{ max_precision_ = m;}
 
+			virtual ~MinMaxPrecisionRecorder() = default;
+
 		private:
 
 			unsigned min_precision_ = std::numeric_limits<unsigned>::max();
@@ -168,21 +172,18 @@ namespace bertini {
 				const TrackingEvent<EmitterT>* p = dynamic_cast<const TrackingEvent<EmitterT>*>(&e);
 				if (p)
 				{
-					Visit(p->Get());
+					precisions_.push_back(p->Get().CurrentPrecision());
 				}
 			}
 
-
-			virtual void Visit(TrackerT const& t) override
-			{
-				precisions_.push_back(t.CurrentPrecision());
-			}
 
 		public:
 			const std::vector<unsigned>& Precisions() const
 			{
 				return precisions_;
 			}
+
+			virtual ~PrecisionAccumulator() = default;
 
 		private:
 			std::vector<unsigned> precisions_;
@@ -203,21 +204,18 @@ namespace bertini {
 				const EventT<EmitterT>* p = dynamic_cast<const EventT<EmitterT>*>(&e);
 				if (p)
 				{
-					Visit(p->Get());
+					path_.push_back(p->Get().CurrentPoint());
 				}
 			}
 
-
-			virtual void Visit(TrackerT const& t) override
-			{
-				path_.push_back(t.CurrentPoint());
-			}
 
 		public:
 			const std::vector<Vec<mpfr> >& Path() const
 			{
 				return path_;
 			}
+
+			virtual ~AMPPathAccumulator() = default;
 
 		private:
 			std::vector<Vec<mpfr> > path_;
@@ -231,6 +229,8 @@ namespace bertini {
 		public:
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			virtual ~GoryDetailLogger() = default;
 
 			virtual void Observe(AnyEvent const& e) override
 			{
@@ -334,8 +334,6 @@ namespace bertini {
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
 			}
 
-			virtual void Visit(TrackerT const& t) override
-			{}
 		};
 
 
@@ -353,8 +351,7 @@ namespace bertini {
 					std::cout << "observed step failure" << std::endl;
 			}
 
-			virtual void Visit(TrackerT const& t) override
-			{}
+			virtual ~StepFailScreenPrinter() = default;
 		};
 
 	} //re: namespace tracking

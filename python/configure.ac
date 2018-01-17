@@ -36,7 +36,7 @@ AX_CXX_COMPILE_STDCXX_14
 AC_ENABLE_SHARED
 
 # no, do not enable the creation of static libraries
-# AC_ENABLE_STATIC
+AC_DISABLE_STATIC
 
 
 #find the linker
@@ -76,7 +76,7 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
 AX_EIGEN
 
 
-AX_BOOST_BASE([1.58],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.58, but it was not found in your system])])
+AX_BOOST_BASE([1.62],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.62, but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO

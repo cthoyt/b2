@@ -39,7 +39,8 @@
 #include "bertini2/trackers/newton_corrector.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
-#include "bertini2/detail/visitable.hpp"
+
+#include "bertini2/detail/observable.hpp"
 
 // Must be at the end of the include list
 #include "bertini2/trackers/events.hpp"
@@ -134,7 +135,7 @@ namespace bertini{
 		*/
 		template<class D>
 		class Tracker : 
-			public Observable<>,
+			public Observable,
 			public detail::Configured<
 				typename TrackerTraits< D >::NeededConfigs
 					>
@@ -207,6 +208,16 @@ namespace bertini{
 				tracking_tolerance_ = tracking_tolerance;
 				digits_tracking_tolerance_ = NumTraits<double>::TolToDigits(tracking_tolerance);
 			}
+
+
+			void SetInfiniteTruncationTolerance(double const& tol)
+			{
+				if (tol <= 0)
+					throw std::runtime_error("truncation threshold must be strictly positive");
+
+				path_truncation_threshold_ = tol;
+			}
+
 
 			/**
 			\brief Track a start point through time, from a start time to a target time.
@@ -403,6 +414,11 @@ namespace bertini{
 				return tracking_tolerance_;
 			}
 
+			auto InfiniteTruncationTolerance() const
+			{
+				return path_truncation_threshold_;
+			}
+
 		private:
 
 			// convert the base tracker into the derived type.
@@ -563,9 +579,9 @@ namespace bertini{
 
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
-			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			NumErrorT tracking_tolerance_; ///< The tracking tolerance.
-			NumErrorT path_truncation_threshold_; ///< The threshold for path truncation.
+			unsigned digits_tracking_tolerance_ = 5; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
+			NumErrorT tracking_tolerance_ = 1e-5; ///< The tracking tolerance.
+			NumErrorT path_truncation_threshold_ = 1e5; ///< The threshold for path truncation.
 
 			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
@@ -621,6 +637,15 @@ namespace bertini{
 				return this->norm_delta_z_;
 			}
 
+			void SetInfiniteTruncation(bool b)
+			{
+				infinite_path_truncation_ = b;
+			}
+	
+			auto InfiniteTruncation()
+			{
+				return infinite_path_truncation_;
+			}
 
 			unsigned NumVariables() const
 			{
